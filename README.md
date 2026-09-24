@@ -12,7 +12,7 @@
  - Send notifications through the Telegram Bot API.
  - View the last cached price in the browser.
  - Delete active alerts.
- - Run locally with an in-process scheduler or on Vercel with a cron endpoint.
+ - Run with an in-process two-minute `setInterval` scheduler.
  - Use local mock APIs for development without contacting Twelve Data or Telegram.
 
  ## Supported symbols
@@ -154,7 +154,7 @@
  curl "http://localhost:3000/api/cron/check-alerts?secret=YOUR_CRON_SECRET"
  ```
 
- `CRON_SECRET` is an authorization value. It is not the cron schedule. The schedule is configured separately in `vercel.json`.
+ `CRON_SECRET` is an authorization value. It is not a cron schedule. This endpoint remains available for manual or external scheduler calls.
 
  ### Health check
 
@@ -162,22 +162,11 @@
  GET /api/test
  ```
 
- ## Vercel deployment
+ ## Deployment note
 
- Deploy the project to Vercel and configure the environment variables in the Vercel project settings. The repository includes this cron configuration:
+ The monitor starts from `src/instrumentation.ts` and uses `setInterval` to run every two minutes. This requires a continuously running Node.js process. The project no longer configures an automatic Vercel Cron schedule; on serverless platforms, the process may be suspended and the interval is not guaranteed to run continuously.
 
- ```json
- {
-	 "crons": [
-		 {
-			 "path": "/api/cron/check-alerts",
-			 "schedule": "*/2 * * * *"
-		 }
-	 ]
- }
- ```
-
- On Vercel, the in-process timer is disabled because serverless functions do not reliably keep long-running timers alive. Vercel Cron invokes the protected endpoint instead.
+ For reliable serverless monitoring, call `GET /api/cron/check-alerts` from an external scheduler using the `CRON_SECRET` authorization value.
 
  ## Local mock APIs
 
@@ -224,7 +213,7 @@
 		 telegram.ts                  Telegram client
 	 types/alert.ts                 Alert types
  scripts/mock-apis.mjs            Local mock Twelve Data and Telegram APIs
- vercel.json                      Vercel Cron configuration
+ vercel.json                      Vercel configuration (no scheduled cron jobs)
  ```
 
  ## Data and security limitations

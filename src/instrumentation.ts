@@ -1,27 +1,14 @@
 /**
  * Next.js instrumentation hook — runs ONCE when the server process boots.
  *
- * Purpose: start the in-process price monitor for LOCAL DEVELOPMENT and
- * SELF-HOSTED deployments (a plain Node.js process, like the old Express app).
+ * Purpose: start the in-process price monitor whenever the Node.js server boots.
+ * The monitor uses setInterval and checks active alerts every two minutes.
  *
- * On serverless platforms (Vercel, etc.) a long-running timer is NOT reliable —
- * functions freeze and are recycled — so we skip it there and rely on the
- * protected cron endpoint instead:
- *
- *     GET /api/cron/check-alerts  (driven by Vercel Cron or any external scheduler)
- *
- * Both paths run the exact same checkAlerts() logic from src/lib/price-monitor.ts.
+ * The /api/cron/check-alerts endpoint remains available for manual or external
+ * invocations, but it is no longer scheduled automatically by Vercel.
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
-
-  if (process.env.VERCEL) {
-    console.log(
-      "[price-monitor] Serverless deployment detected — in-process scheduler disabled. " +
-        "Use /api/cron/check-alerts via Vercel Cron or an external scheduler."
-    );
-    return;
-  }
 
   const { startPriceMonitor } = await import("./lib/price-monitor");
   startPriceMonitor();

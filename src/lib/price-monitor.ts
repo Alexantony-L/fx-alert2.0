@@ -13,18 +13,8 @@ import type { Alert } from "@/types/alert";
  *
  *   get alerts → get current price → compare → send Telegram → remove triggered alert
  *
- * TWO WAYS TO RUN IT
- * ------------------
- * 1. Local development / self-hosted (one Node.js process):
- *      startPriceMonitor() — started automatically from src/instrumentation.ts,
- *      checks every 2 minutes by default
- *      Express app's every-2-minutes node-cron job.
- *
- * 2. Serverless (Vercel etc.) where long-running timers are NOT reliable:
- *      the protected endpoint GET /api/cron/check-alerts runs checkAlerts(),
- *      driven by Vercel Cron or any external scheduler.
- *
- * The checking logic itself is identical in both cases.
+ * startPriceMonitor() is called automatically from src/instrumentation.ts and
+ * runs checkAlerts() every 2 minutes by default using setInterval.
  */
 
 export type PriceCheckResult = {
